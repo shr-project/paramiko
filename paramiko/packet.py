@@ -121,6 +121,7 @@ class Packetizer(object):
         self.__keepalive_interval = 0
         self.__keepalive_last = time.time()
         self.__keepalive_callback = None
+        self.__last_message_received = time.time()
 
         self.__timer = None
         self.__handshake_complete = False
@@ -574,6 +575,7 @@ class Packetizer(object):
                 DEBUG,
                 "Read packet <{}>, length {}".format(cmd_name, len(payload)),
             )
+        self.__last_message_received = time.time()
         return cmd, msg
 
     # ...protected...
@@ -599,6 +601,9 @@ class Packetizer(object):
         if now > self.__keepalive_last + self.__keepalive_interval:
             self.__keepalive_callback()
             self.__keepalive_last = now
+        if now - self.__last_message_received > 2 * self.__keepalive_interval:
+            self.__closed = True
+
 
     def _read_timeout(self, timeout):
         start = time.time()
